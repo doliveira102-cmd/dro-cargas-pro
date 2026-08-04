@@ -1,0 +1,277 @@
+// DRO Cargas PRO — Schema de banco de dados
+// PostgreSQL + Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  OPERADOR
+  COMERCIAL
+  MOTORISTA
+  CLIENTE
+}
+
+enum CargaStatus {
+  DISPONIVEL
+  EM_TRANSITO
+  ENCERRADA
+  SUSPENSA
+  CANCELADA
+}
+
+enum TipoDocumento {
+  FOTO
+  PDF
+  XML
+  CTE
+  MDFE
+  OUTRO
+}
+
+enum TipoTransacao {
+  RECEITA
+  DESPESA
+  COMISSAO
+}
+
+// ---------------------------------------------------------------
+// USUÁRIOS E AUTENTICAÇÃO
+// ---------------------------------------------------------------
+
+model User {
+  id                String    @id @default(uuid())
+  nome              String
+  email             String    @unique
+  senhaHash         String
+  role              Role
+  fotoUrl           String?
+  ativo             Boolean   @default(true)
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  ultimoAcesso      DateTime?
+  criadoEm          DateTime  @default(now())
+  atualizadoEm      DateTime  @updatedAt
+
+  refreshTokens     RefreshToken[]
+  auditLogs         AuditLog[]
+  motorista         Motorista?
+  cliente           Cliente?
+  cargasCriadas     Carga[]        @relation("CargaCriadaPor")
+
+  @@index([email])
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiraEm   DateTime
+  revogado   Boolean  @default(false)
+  criadoEm   DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  tokenHash String   @unique
+  expiraEm  DateTime
+  usado     Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  acao       String
+  entidade   String
+  entidadeId String?
+  detalhes   Json?
+  ip         String?
+  criadoEm   DateTime @default(now())
+
+  @@index([entidade, entidadeId])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------
+// CARGAS
+// ---------------------------------------------------------------
+
+model Carga {
+  id              String      @id @default(uuid())
+  codigo          String      @unique // ex: CG-4821
+  origemCidade    String
+  origemUf        String
+  destinoCidade   String
+  destinoUf       String
+  produto         String
+  peso            Decimal?    @db.Decimal(10, 2)
+  valor           Decimal     @db.Decimal(12, 2)
+  status          CargaStatus @default(DISPONIVEL)
+  observacoes     String?
+  dataColeta      DateTime?
+  dataEntrega     DateTime?
+
+  clienteId       String?
+  cliente         Cliente?    @relation(fields: [clienteId], references: [id])
+  motoristaId     String?
+  motorista       Motorista?  @relation(fields: [motoristaId], references: [id])
+  veiculoId       String?
+  veiculo         Veiculo?    @relation(fields: [veiculoId], references: [id])
+
+  criadoPorId     String
+  criadoPor       User        @relation("CargaCriadaPor", fields: [criadoPorId], references: [id])
+
+  documentos      Documento[]
+  historico       CargaHistorico[]
+
+  criadoEm        DateTime    @default(now())
+  atualizadoEm    DateTime    @updatedAt
+
+  @@index([status])
+  @@index([clienteId])
+  @@index([motoristaId])
+  @@map("cargas")
+}
+
+model CargaHistorico {
+  id        String   @id @default(uuid())
+  cargaId   String
+  carga     Carga    @relation(fields: [cargaId], references: [id], onDelete: Cascade)
+  statusDe  CargaStatus?
+  statusPara CargaStatus
+  observacao String?
+  criadoEm  DateTime @default(now())
+
+  @@map("carga_historico")
+}
+
+model Documento {
+  id        String        @id @default(uuid())
+  cargaId   String
+  carga     Carga         @relation(fields: [cargaId], references: [id], onDelete: Cascade)
+  tipo      TipoDocumento
+  nomeArquivo String
+  url       String
+  criadoEm  DateTime      @default(now())
+
+  @@map("documentos")
+}
+
+// ---------------------------------------------------------------
+// MOTORISTAS E FROTA
+// ---------------------------------------------------------------
+
+model Motorista {
+  id            String   @id @default(uuid())
+  userId        String?  @unique
+  user          User?    @relation(fields: [userId], references: [id])
+  nome          String
+  cnh           String
+  cnhCategoria  String
+  cnhValidade   DateTime
+  telefone      String?
+  disponivel    Boolean  @default(true)
+  latitude      Decimal? @db.Decimal(9, 6)
+  longitude     Decimal? @db.Decimal(9, 6)
+  avaliacaoMedia Decimal @default(0) @db.Decimal(3, 2)
+
+  cargas        Carga[]
+  veiculos      Veiculo[]
+
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+
+  @@map("motoristas")
+}
+
+model Veiculo {
+  id              String   @id @default(uuid())
+  placa           String   @unique
+  tipo            String   // ex: Carreta, Bitrem, Truck
+  motoristaId     String?
+  motorista       Motorista? @relation(fields: [motoristaId], references: [id])
+  seguroValidade  DateTime?
+  licenciamentoValidade DateTime?
+  quilometragem   Int?      @default(0)
+
+  cargas          Carga[]
+
+  criadoEm        DateTime @default(now())
+  atualizadoEm    DateTime @updatedAt
+
+  @@map("veiculos")
+}
+
+// ---------------------------------------------------------------
+// COMERCIAL
+// ---------------------------------------------------------------
+
+model Cliente {
+  id           String   @id @default(uuid())
+  userId       String?  @unique
+  user         User?    @relation(fields: [userId], references: [id])
+  razaoSocial  String
+  cnpjCpf      String   @unique
+  email        String?
+  telefone     String?
+  cidade       String?
+  uf           String?
+
+  cargas       Carga[]
+  propostas    Proposta[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("clientes")
+}
+
+model Proposta {
+  id         String   @id @default(uuid())
+  clienteId  String
+  cliente    Cliente  @relation(fields: [clienteId], references: [id])
+  descricao  String
+  valor      Decimal  @db.Decimal(12, 2)
+  status     String   @default("aberta") // aberta | aceita | recusada
+  criadoEm   DateTime @default(now())
+
+  @@map("propostas")
+}
+
+// ---------------------------------------------------------------
+// FINANCEIRO
+// ---------------------------------------------------------------
+
+model Transacao {
+  id          String        @id @default(uuid())
+  tipo        TipoTransacao
+  descricao   String
+  valor       Decimal       @db.Decimal(12, 2)
+  cargaId     String?
+  categoria   String?
+  dataPagamento DateTime?
+  criadoEm    DateTime      @default(now())
+
+  @@index([tipo])
+  @@map("transacoes")
+}
