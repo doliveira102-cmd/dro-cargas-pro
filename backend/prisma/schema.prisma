@@ -10,10 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ---------------------------------------------------------------
-// ENUMS
-// ---------------------------------------------------------------
-
 enum Role {
   ADMIN
   OPERADOR
@@ -45,23 +41,19 @@ enum TipoTransacao {
   COMISSAO
 }
 
-// ---------------------------------------------------------------
-// USUÁRIOS E AUTENTICAÇÃO
-// ---------------------------------------------------------------
-
 model User {
   id                String    @id @default(uuid())
   nome              String
   email             String    @unique
-  senhaHash         String
+  senhaHash         String    @map("senha_hash")
   role              Role
-  fotoUrl           String?
+  fotoUrl           String?   @map("foto_url")
   ativo             Boolean   @default(true)
-  twoFactorEnabled  Boolean   @default(false)
-  twoFactorSecret   String?
-  ultimoAcesso      DateTime?
-  criadoEm          DateTime  @default(now())
-  atualizadoEm      DateTime  @updatedAt
+  twoFactorEnabled  Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorSecret   String?   @map("two_factor_secret")
+  ultimoAcesso      DateTime? @map("ultimo_acesso")
+  criadoEm          DateTime  @default(now()) @map("criado_em")
+  atualizadoEm      DateTime  @default(now()) @map("atualizado_em")
 
   refreshTokens     RefreshToken[]
   auditLogs         AuditLog[]
@@ -75,12 +67,12 @@ model User {
 
 model RefreshToken {
   id         String   @id @default(uuid())
-  tokenHash  String   @unique
-  userId     String
+  tokenHash  String   @unique @map("token_hash")
+  userId     String   @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiraEm   DateTime
+  expiraEm   DateTime @map("expira_em")
   revogado   Boolean  @default(false)
-  criadoEm   DateTime @default(now())
+  criadoEm   DateTime @default(now()) @map("criado_em")
 
   @@index([userId])
   @@map("refresh_tokens")
@@ -89,63 +81,59 @@ model RefreshToken {
 model PasswordResetToken {
   id        String   @id @default(uuid())
   email     String
-  tokenHash String   @unique
-  expiraEm  DateTime
+  tokenHash String   @unique @map("token_hash")
+  expiraEm  DateTime @map("expira_em")
   usado     Boolean  @default(false)
-  criadoEm  DateTime @default(now())
+  criadoEm  DateTime @default(now()) @map("criado_em")
 
   @@map("password_reset_tokens")
 }
 
 model AuditLog {
   id         String   @id @default(uuid())
-  userId     String?
+  userId     String?  @map("user_id")
   user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   acao       String
   entidade   String
-  entidadeId String?
+  entidadeId String?  @map("entidade_id")
   detalhes   Json?
   ip         String?
-  criadoEm   DateTime @default(now())
+  criadoEm   DateTime @default(now()) @map("criado_em")
 
   @@index([entidade, entidadeId])
   @@map("audit_logs")
 }
 
-// ---------------------------------------------------------------
-// CARGAS
-// ---------------------------------------------------------------
-
 model Carga {
   id              String      @id @default(uuid())
-  codigo          String      @unique // ex: CG-4821
-  origemCidade    String
-  origemUf        String
-  destinoCidade   String
-  destinoUf       String
+  codigo          String      @unique
+  origemCidade    String      @map("origem_cidade")
+  origemUf        String      @map("origem_uf")
+  destinoCidade   String      @map("destino_cidade")
+  destinoUf       String      @map("destino_uf")
   produto         String
   peso            Decimal?    @db.Decimal(10, 2)
   valor           Decimal     @db.Decimal(12, 2)
   status          CargaStatus @default(DISPONIVEL)
   observacoes     String?
-  dataColeta      DateTime?
-  dataEntrega     DateTime?
+  dataColeta      DateTime?   @map("data_coleta")
+  dataEntrega     DateTime?   @map("data_entrega")
 
-  clienteId       String?
+  clienteId       String?     @map("cliente_id")
   cliente         Cliente?    @relation(fields: [clienteId], references: [id])
-  motoristaId     String?
+  motoristaId     String?     @map("motorista_id")
   motorista       Motorista?  @relation(fields: [motoristaId], references: [id])
-  veiculoId       String?
+  veiculoId       String?     @map("veiculo_id")
   veiculo         Veiculo?    @relation(fields: [veiculoId], references: [id])
 
-  criadoPorId     String
+  criadoPorId     String      @map("criado_por_id")
   criadoPor       User        @relation("CargaCriadaPor", fields: [criadoPorId], references: [id])
 
   documentos      Documento[]
   historico       CargaHistorico[]
 
-  criadoEm        DateTime    @default(now())
-  atualizadoEm    DateTime    @updatedAt
+  criadoEm        DateTime    @default(now()) @map("criado_em")
+  atualizadoEm    DateTime    @default(now()) @map("atualizado_em")
 
   @@index([status])
   @@index([clienteId])
@@ -155,51 +143,47 @@ model Carga {
 
 model CargaHistorico {
   id        String   @id @default(uuid())
-  cargaId   String
+  cargaId   String   @map("carga_id")
   carga     Carga    @relation(fields: [cargaId], references: [id], onDelete: Cascade)
-  statusDe  CargaStatus?
-  statusPara CargaStatus
+  statusDe  CargaStatus? @map("status_de")
+  statusPara CargaStatus @map("status_para")
   observacao String?
-  criadoEm  DateTime @default(now())
+  criadoEm  DateTime @default(now()) @map("criado_em")
 
   @@map("carga_historico")
 }
 
 model Documento {
   id        String        @id @default(uuid())
-  cargaId   String
+  cargaId   String        @map("carga_id")
   carga     Carga         @relation(fields: [cargaId], references: [id], onDelete: Cascade)
   tipo      TipoDocumento
-  nomeArquivo String
+  nomeArquivo String      @map("nome_arquivo")
   url       String
-  criadoEm  DateTime      @default(now())
+  criadoEm  DateTime      @default(now()) @map("criado_em")
 
   @@map("documentos")
 }
 
-// ---------------------------------------------------------------
-// MOTORISTAS E FROTA
-// ---------------------------------------------------------------
-
 model Motorista {
   id            String   @id @default(uuid())
-  userId        String?  @unique
+  userId        String?  @unique @map("user_id")
   user          User?    @relation(fields: [userId], references: [id])
   nome          String
   cnh           String
-  cnhCategoria  String
-  cnhValidade   DateTime
+  cnhCategoria  String   @map("cnh_categoria")
+  cnhValidade   DateTime @map("cnh_validade")
   telefone      String?
   disponivel    Boolean  @default(true)
   latitude      Decimal? @db.Decimal(9, 6)
   longitude     Decimal? @db.Decimal(9, 6)
-  avaliacaoMedia Decimal @default(0) @db.Decimal(3, 2)
+  avaliacaoMedia Decimal @default(0) @db.Decimal(3, 2) @map("avaliacao_media")
 
   cargas        Carga[]
   veiculos      Veiculo[]
 
-  criadoEm      DateTime @default(now())
-  atualizadoEm  DateTime @updatedAt
+  criadoEm      DateTime @default(now()) @map("criado_em")
+  atualizadoEm  DateTime @default(now()) @map("atualizado_em")
 
   @@map("motoristas")
 }
@@ -207,31 +191,27 @@ model Motorista {
 model Veiculo {
   id              String   @id @default(uuid())
   placa           String   @unique
-  tipo            String   // ex: Carreta, Bitrem, Truck
-  motoristaId     String?
+  tipo            String
+  motoristaId     String?  @map("motorista_id")
   motorista       Motorista? @relation(fields: [motoristaId], references: [id])
-  seguroValidade  DateTime?
-  licenciamentoValidade DateTime?
+  seguroValidade  DateTime? @map("seguro_validade")
+  licenciamentoValidade DateTime? @map("licenciamento_validade")
   quilometragem   Int?      @default(0)
 
   cargas          Carga[]
 
-  criadoEm        DateTime @default(now())
-  atualizadoEm    DateTime @updatedAt
+  criadoEm        DateTime @default(now()) @map("criado_em")
+  atualizadoEm    DateTime @default(now()) @map("atualizado_em")
 
   @@map("veiculos")
 }
 
-// ---------------------------------------------------------------
-// COMERCIAL
-// ---------------------------------------------------------------
-
 model Cliente {
   id           String   @id @default(uuid())
-  userId       String?  @unique
+  userId       String?  @unique @map("user_id")
   user         User?    @relation(fields: [userId], references: [id])
-  razaoSocial  String
-  cnpjCpf      String   @unique
+  razaoSocial  String   @map("razao_social")
+  cnpjCpf      String   @unique @map("cnpj_cpf")
   email        String?
   telefone     String?
   cidade       String?
@@ -240,37 +220,33 @@ model Cliente {
   cargas       Carga[]
   propostas    Proposta[]
 
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @default(now()) @map("atualizado_em")
 
   @@map("clientes")
 }
 
 model Proposta {
   id         String   @id @default(uuid())
-  clienteId  String
+  clienteId  String   @map("cliente_id")
   cliente    Cliente  @relation(fields: [clienteId], references: [id])
   descricao  String
   valor      Decimal  @db.Decimal(12, 2)
-  status     String   @default("aberta") // aberta | aceita | recusada
-  criadoEm   DateTime @default(now())
+  status     String   @default("aberta")
+  criadoEm   DateTime @default(now()) @map("criado_em")
 
   @@map("propostas")
 }
-
-// ---------------------------------------------------------------
-// FINANCEIRO
-// ---------------------------------------------------------------
 
 model Transacao {
   id          String        @id @default(uuid())
   tipo        TipoTransacao
   descricao   String
   valor       Decimal       @db.Decimal(12, 2)
-  cargaId     String?
+  cargaId     String?       @map("carga_id")
   categoria   String?
-  dataPagamento DateTime?
-  criadoEm    DateTime      @default(now())
+  dataPagamento DateTime?   @map("data_pagamento")
+  criadoEm    DateTime      @default(now()) @map("criado_em")
 
   @@index([tipo])
   @@map("transacoes")
