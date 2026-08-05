@@ -16,6 +16,8 @@ enum Role {
   COMERCIAL
   MOTORISTA
   CLIENTE
+
+  @@map("role")
 }
 
 enum CargaStatus {
@@ -24,6 +26,8 @@ enum CargaStatus {
   ENCERRADA
   SUSPENSA
   CANCELADA
+
+  @@map("carga_status")
 }
 
 enum TipoDocumento {
@@ -33,12 +37,16 @@ enum TipoDocumento {
   CTE
   MDFE
   OUTRO
+
+  @@map("tipo_documento")
 }
 
 enum TipoTransacao {
   RECEITA
   DESPESA
   COMISSAO
+
+  @@map("tipo_transacao")
 }
 
 model User {
