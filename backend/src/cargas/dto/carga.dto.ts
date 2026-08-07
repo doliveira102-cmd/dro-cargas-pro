@@ -9,10 +9,14 @@ export class CreateCargaDto {
   @IsString() produto: string;
 
   @IsNumber() valor: number;
+  @IsOptional() @IsNumber() valorMotorista?: number;
+  @IsOptional() @IsString() opCn?: string;
+  @IsOptional() @IsString() localizacaoLink?: string;
 
   @IsOptional() @IsNumber() peso?: number;
   @IsOptional() @IsString() observacoes?: string;
   @IsOptional() @IsUUID() clienteId?: string;
+  @IsOptional() @IsUUID() clienteDestinoId?: string;
   @IsOptional() @IsUUID() motoristaId?: string;
   @IsOptional() @IsUUID() veiculoId?: string;
   @IsOptional() @IsDateString() dataColeta?: string;
@@ -26,8 +30,13 @@ export class UpdateCargaDto {
   @IsOptional() @IsString() destinoUf?: string;
   @IsOptional() @IsString() produto?: string;
   @IsOptional() @IsNumber() valor?: number;
+  @IsOptional() @IsNumber() valorMotorista?: number;
+  @IsOptional() @IsString() opCn?: string;
+  @IsOptional() @IsString() localizacaoLink?: string;
   @IsOptional() @IsNumber() peso?: number;
   @IsOptional() @IsString() observacoes?: string;
+  @IsOptional() @IsUUID() clienteId?: string;
+  @IsOptional() @IsUUID() clienteDestinoId?: string;
   @IsOptional() @IsUUID() motoristaId?: string;
   @IsOptional() @IsUUID() veiculoId?: string;
 }
@@ -44,4 +53,9 @@ export class FiltroCargaDto {
   @IsOptional() @IsEnum(CargaStatus) status?: CargaStatus;
   @IsOptional() @IsUUID() clienteId?: string;
   @IsOptional() @IsUUID() motoristaId?: string;
+}
+
+export class AddMotoristaCargaDto {
+  @IsUUID() motoristaId: string;
+  @IsOptional() @IsUUID() veiculoId?: string;
 }

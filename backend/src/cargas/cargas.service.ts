@@ -30,7 +30,7 @@ export class CargasService {
         criadoPorId,
         historico: { create: { statusPara: 'DISPONIVEL' } },
       },
-      include: { cliente: true, motorista: true, veiculo: true },
+      include: { cliente: true, clienteDestino: true, motorista: true, veiculo: true, motoristasAtribuidos: { include: { motorista: true, veiculo: true } } },
     });
   }
 
@@ -47,7 +47,7 @@ export class CargasService {
     const [items, total] = await this.prisma.$transaction([
       this.prisma.carga.findMany({
         where,
-        include: { cliente: true, motorista: true, veiculo: true },
+        include: { cliente: true, clienteDestino: true, motorista: true, veiculo: true, motoristasAtribuidos: { include: { motorista: true, veiculo: true } } },
         orderBy: { criadoEm: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -63,10 +63,12 @@ export class CargasService {
       where: { id },
       include: {
         cliente: true,
+        clienteDestino: true,
         motorista: true,
         veiculo: true,
         documentos: true,
         historico: { orderBy: { criadoEm: 'desc' } },
+        motoristasAtribuidos: { include: { motorista: true, veiculo: true } },
       },
     });
     if (!carga) throw new NotFoundException('Carga não encontrada.');
@@ -116,6 +118,20 @@ export class CargasService {
   async remove(id: string) {
     await this.findOne(id);
     await this.prisma.carga.delete({ where: { id } });
+    return { ok: true };
+  }
+
+  // Permite agendar mais de um caminhão/motorista para o mesmo lote de carga
+  async addMotorista(cargaId: string, dto: { motoristaId: string; veiculoId?: string }) {
+    await this.findOne(cargaId);
+    return this.prisma.cargaMotorista.create({
+      data: { cargaId, motoristaId: dto.motoristaId, veiculoId: dto.veiculoId },
+      include: { motorista: true, veiculo: true },
+    });
+  }
+
+  async removeMotorista(cargaId: string, atribuicaoId: string) {
+    await this.prisma.cargaMotorista.deleteMany({ where: { id: atribuicaoId, cargaId } });
     return { ok: true };
   }
 }

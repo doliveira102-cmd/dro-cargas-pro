@@ -7,6 +7,9 @@ export class CreateClienteDto {
   @IsOptional() @IsString() telefone?: string;
   @IsOptional() @IsString() cidade?: string;
   @IsOptional() @IsString() uf?: string;
+  @IsOptional() @IsString() responsavel?: string;
+  @IsOptional() @IsString() localizacaoLink?: string;
+  @IsOptional() @IsString() observacoes?: string;
 }
 
 export class UpdateClienteDto {
@@ -15,6 +18,9 @@ export class UpdateClienteDto {
   @IsOptional() @IsString() telefone?: string;
   @IsOptional() @IsString() cidade?: string;
   @IsOptional() @IsString() uf?: string;
+  @IsOptional() @IsString() responsavel?: string;
+  @IsOptional() @IsString() localizacaoLink?: string;
+  @IsOptional() @IsString() observacoes?: string;
 }
 
 export class CreatePropostaDto {

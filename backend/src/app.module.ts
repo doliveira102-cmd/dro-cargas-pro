@@ -11,6 +11,7 @@ import { MotoristasModule } from './motoristas/motoristas.module';
 import { VeiculosModule } from './veiculos/veiculos.module';
 import { FinanceiroModule } from './financeiro/financeiro.module';
 import { ComercialModule } from './comercial/comercial.module';
+import { PisoAnttModule } from './piso-antt/piso-antt.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ComercialModule } from './comercial/comercial.module';
     VeiculosModule,
     FinanceiroModule,
     ComercialModule,
+    PisoAnttModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

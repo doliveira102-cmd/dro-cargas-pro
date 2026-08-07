@@ -6,7 +6,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { CargasService } from './cargas.service';
 import {
-  CreateCargaDto, UpdateCargaDto, UpdateStatusCargaDto, FiltroCargaDto,
+  CreateCargaDto, UpdateCargaDto, UpdateStatusCargaDto, FiltroCargaDto, AddMotoristaCargaDto,
 } from './dto/carga.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -56,5 +56,17 @@ export class CargasController {
   @Roles('ADMIN')
   remove(@Param('id') id: string) {
     return this.cargasService.remove(id);
+  }
+
+  @Post(':id/motoristas')
+  @Roles('ADMIN', 'OPERADOR')
+  addMotorista(@Param('id') id: string, @Body() dto: AddMotoristaCargaDto) {
+    return this.cargasService.addMotorista(id, dto);
+  }
+
+  @Delete(':id/motoristas/:atribuicaoId')
+  @Roles('ADMIN', 'OPERADOR')
+  removeMotorista(@Param('id') id: string, @Param('atribuicaoId') atribuicaoId: string) {
+    return this.cargasService.removeMotorista(id, atribuicaoId);
   }
 }

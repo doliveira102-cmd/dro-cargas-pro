@@ -61,7 +61,10 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    const message = Array.isArray(body?.message) ? body.message.join(", ") : body?.message;
+    let message: string | undefined;
+    if (Array.isArray(body?.message)) message = body.message.join(", ");
+    else if (typeof body?.message === "string") message = body.message;
+    else if (body?.message) message = JSON.stringify(body.message);
     throw new Error(message || `Erro ${res.status}`);
   }
 
@@ -77,14 +80,19 @@ export type CargaStatus = "DISPONIVEL" | "EM_TRANSITO" | "ENCERRADA" | "SUSPENSA
 export interface Carga {
   id: string;
   codigo: string;
+  opCn?: string | null;
   origemCidade: string;
   origemUf: string;
   destinoCidade: string;
   destinoUf: string;
   produto: string;
   valor: number;
+  valorMotorista?: number | null;
+  localizacaoLink?: string | null;
+  observacoes?: string | null;
   status: CargaStatus;
   criadoEm: string;
+  clienteId?: string | null;
   cliente?: { razaoSocial: string } | null;
   motorista?: { nome: string } | null;
 }
@@ -94,6 +102,8 @@ export interface Motorista {
   nome: string;
   cnh: string;
   cnhCategoria: string;
+  cpf?: string | null;
+  rg?: string | null;
   telefone?: string;
   disponivel: boolean;
   avaliacaoMedia: number;
@@ -107,6 +117,9 @@ export interface Cliente {
   telefone?: string;
   cidade?: string;
   uf?: string;
+  responsavel?: string | null;
+  localizacaoLink?: string | null;
+  observacoes?: string | null;
 }
 
 export interface ResumoFinanceiro {

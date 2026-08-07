@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Building2 } from "lucide-react";
+import { Plus, X, Building2, MapPin } from "lucide-react";
 import { apiFetch, Cliente } from "@/lib/api";
+import { CidadeUfInput } from "@/components/CidadeUfInput";
 
 export default function ComercialPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -35,15 +36,25 @@ export default function ComercialPage() {
         {clientes.map((c) => (
           <div key={c.id} className="bg-white dark:bg-surface border border-slate-200 dark:border-border rounded-2xl p-4 flex flex-col gap-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber/10 text-amber flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-amber/10 text-amber flex items-center justify-center shrink-0">
                 <Building2 size={15} />
               </div>
-              <div className="font-semibold text-sm">{c.razaoSocial}</div>
+              <div className="min-w-0">
+                <div className="font-semibold text-sm truncate">{c.razaoSocial}</div>
+                {c.responsavel && <div className="text-xs text-slate-400">{c.responsavel}</div>}
+              </div>
             </div>
             <div className="text-xs text-slate-400">{c.cnpjCpf}</div>
+            {c.telefone && <div className="text-xs text-slate-400">{c.telefone}</div>}
             {(c.cidade || c.uf) && (
               <div className="text-xs text-slate-400">{c.cidade}{c.cidade && c.uf ? "/" : ""}{c.uf}</div>
             )}
+            {c.localizacaoLink && (
+              <a href={c.localizacaoLink} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-teal">
+                <MapPin size={11} /> Ver localização
+              </a>
+            )}
+            {c.observacoes && <div className="text-xs text-slate-400 border-t border-slate-100 dark:border-borderSoft pt-2 mt-1">{c.observacoes}</div>}
           </div>
         ))}
         {clientes.length === 0 && !erro && (
@@ -65,7 +76,10 @@ export default function ComercialPage() {
 }
 
 function NovoClienteModal({ onClose, onCriado }: { onClose: () => void; onCriado: () => void }) {
-  const [form, setForm] = useState({ razaoSocial: "", cnpjCpf: "", email: "", telefone: "", cidade: "", uf: "" });
+  const [form, setForm] = useState({
+    razaoSocial: "", cidade: "", responsavel: "", cnpjCpf: "", telefone: "",
+    email: "", uf: "", localizacaoLink: "", observacoes: "",
+  });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -84,8 +98,8 @@ function NovoClienteModal({ onClose, onCriado }: { onClose: () => void; onCriado
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-      <div className="bg-white dark:bg-surface rounded-2xl p-5 w-full max-w-md">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 py-8 overflow-y-auto">
+      <div className="bg-white dark:bg-surface rounded-2xl p-5 w-full max-w-md my-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display font-semibold">Novo cliente</h2>
           <button onClick={onClose}><X size={18} className="text-slate-400" /></button>
@@ -96,12 +110,26 @@ function NovoClienteModal({ onClose, onCriado }: { onClose: () => void; onCriado
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <Field label="Razão social" value={form.razaoSocial} onChange={(v) => setForm({ ...form, razaoSocial: v })} required />
+          <Field label="Nome do cliente / unidade" value={form.razaoSocial} onChange={(v) => setForm({ ...form, razaoSocial: v })} required />
+          <CidadeUfInput
+            labelCidade="Cidade" labelUf="UF"
+            cidade={form.cidade} uf={form.uf}
+            onChangeCidade={(v) => setForm({ ...form, cidade: v })}
+            onChangeUf={(v) => setForm({ ...form, uf: v })}
+          />
+          <Field label="Responsável" value={form.responsavel} onChange={(v) => setForm({ ...form, responsavel: v })} />
           <Field label="CNPJ/CPF" value={form.cnpjCpf} onChange={(v) => setForm({ ...form, cnpjCpf: v })} required />
+          <Field label="Telefone" value={form.telefone} onChange={(v) => setForm({ ...form, telefone: v })} />
           <Field label="E-mail" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Cidade" value={form.cidade} onChange={(v) => setForm({ ...form, cidade: v })} />
-            <Field label="UF" value={form.uf} onChange={(v) => setForm({ ...form, uf: v })} maxLength={2} />
+          <Field label="Localização (link Google Maps)" value={form.localizacaoLink} onChange={(v) => setForm({ ...form, localizacaoLink: v })} />
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-500">Observações</label>
+            <textarea
+              value={form.observacoes}
+              onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
+              rows={2}
+              className="border border-slate-200 dark:border-border bg-slate-50 dark:bg-surfaceRaised rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber/50"
+            />
           </div>
           <button type="submit" disabled={salvando} className="mt-2 bg-amber text-ink font-semibold rounded-lg py-2.5 text-sm disabled:opacity-60">
             {salvando ? "Salvando..." : "Criar cliente"}

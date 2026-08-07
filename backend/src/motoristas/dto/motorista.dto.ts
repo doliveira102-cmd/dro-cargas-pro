@@ -5,6 +5,8 @@ export class CreateMotoristaDto {
   @IsString() cnh: string;
   @IsString() cnhCategoria: string;
   @IsDateString() cnhValidade: string;
+  @IsOptional() @IsString() cpf?: string;
+  @IsOptional() @IsString() rg?: string;
   @IsOptional() @IsString() telefone?: string;
   @IsOptional() @IsString() userId?: string;
 }
