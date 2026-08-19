@@ -12,11 +12,11 @@ import { VeiculosModule } from './veiculos/veiculos.module';
 import { FinanceiroModule } from './financeiro/financeiro.module';
 import { ComercialModule } from './comercial/comercial.module';
 import { PisoAnttModule } from './piso-antt/piso-antt.module';
+import { OrdensModule } from './ordens/ordens.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    // Rate limit global: 60 requisições por minuto por IP (mitiga brute-force / DoS básico)
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     PrismaModule,
     RealtimeModule,
@@ -28,6 +28,7 @@ import { PisoAnttModule } from './piso-antt/piso-antt.module';
     FinanceiroModule,
     ComercialModule,
     PisoAnttModule,
+    OrdensModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
