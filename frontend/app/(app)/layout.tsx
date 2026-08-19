@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Truck, Package, DollarSign, Users, Monitor, LogOut, Sun, Moon, ChevronsLeft, ChevronsRight, Calculator,
+  Truck, Package, Users, Monitor, LogOut, Sun, Moon, ChevronsLeft, ChevronsRight, Calculator, FileText,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/cargas", label: "Cargas", icon: Package },
   { href: "/motoristas", label: "Motoristas", icon: Truck },
   { href: "/comercial", label: "Comercial", icon: Users },
+  { href: "/ordens", label: "Ordens", icon: FileText },
   { href: "/piso-antt", label: "Piso ANTT", icon: Calculator },
 ];
 
@@ -125,4 +126,3 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
