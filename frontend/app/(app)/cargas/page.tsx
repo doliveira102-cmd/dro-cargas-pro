@@ -121,16 +121,3 @@ export default function CargasPage() {
           disabled={selecionadas.size === 0 || processando}
           className="flex items-center gap-1.5 bg-danger/10 text-danger text-xs font-semibold px-3 py-2 rounded-lg disabled:opacity-40"
         >
-          <Trash2 size={13} /> Excluir selecionadas
-        </button>
-        <button
-          onClick={limparZeradas}
-          disabled={processando}
-          className="flex items-center gap-1.5 bg-slate-100 dark:bg-surfaceRaised text-slate-500 text-xs font-semibold px-3 py-2 rounded-lg disabled:opacity-40"
-        >
-          <Eraser size={13} /> Limpar cargas zeradas
-        </button>
-      </div>
-
-      <div className="flex gap-2">
-        {
